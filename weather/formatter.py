@@ -1,65 +1,60 @@
 from datetime import datetime
 
+# -----------------------------
+# 📦 WEATHER FORMATTERS
+# -----------------------------
+
 def format_current_weather(data: dict) -> str:
     """
-    Formats current weather data into a readable message.
+    Formats current weather data into a clean, readable message with emoji.
     """
     if not data:
         return "⚠️ Couldn't retrieve current weather data."
 
-    name = data.get("name", "Unknown location")
-    temp = data["main"]["temp"]
-    feels_like = data["main"]["feels_like"]
-    humidity = data["main"]["humidity"]
-    pressure = data["main"]["pressure"]
-    clouds = data["clouds"]["all"]
-    wind = data["wind"]["speed"]
-    gust = data["wind"].get("gust", 0)
-    condition = data["weather"][0]["description"].capitalize()
-    icon = data["weather"][0]["icon"]
+    main = data["main"]
+    weather = data["weather"][0]
+    wind = data["wind"]
+    sys = data["sys"]
+    coord = data["coord"]
 
-    sunrise = timestamp_to_time(data["sys"]["sunrise"])
-    sunset = timestamp_to_time(data["sys"]["sunset"])
-    updated = timestamp_to_datetime(data["dt"])
-
-    lat = data["coord"]["lat"]
-    lon = data["coord"]["lon"]
-
+    emoji = get_weather_emoji(weather["main"])
     return (
-        f"**🌍 Weather for {name}**\n"
-        f"> **Condition:** {condition}\n"
-        f"> **Temperature:** {temp}°C (Feels like {feels_like}°C)\n"
-        f"> **Humidity:** {humidity}%\n"
-        f"> **Pressure:** {pressure} hPa\n"
-        f"> **Cloud Coverage:** {clouds}%\n"
-        f"> **Wind:** {wind} km/h (Gusts: {gust} km/h)\n"
-        f"> **Sunrise:** {sunrise} | **Sunset:** {sunset}\n"
-        f"> **Coordinates:** {lat}, {lon}\n"
-        f"> *Last updated:* {updated}"
+        f"{emoji} **{weather['description'].capitalize()}**\n"
+        f"🌡️ Temperature: {main['temp']}°C (Feels like {main['feels_like']}°C)\n"
+        f"💧 Humidity: {main['humidity']}%\n"
+        f"🔵 Pressure: {main['pressure']} hPa\n"
+        f"☁️ Cloud Coverage: {data['clouds']['all']}%\n"
+        f"🌬️ Wind: {wind['speed']} km/h (Gusts: {wind.get('gust', 0)} km/h)\n"
+        f"🌅 Sunrise: {timestamp_to_time(sys['sunrise'])} | 🌇 Sunset: {timestamp_to_time(sys['sunset'])}\n"
+        f"📍 Coordinates: [Lat: {coord['lat']}, Lon: {coord['lon']}]\n"
+        f"🕒 Last updated: {timestamp_to_datetime(data['dt'])}"
     )
+
 
 def format_forecast(data: dict, count: int = 3) -> str:
     """
-    Formats upcoming forecast entries (default: next 3 intervals).
+    Formats forecast data for the next few intervals.
     """
     if not data or "list" not in data:
         return "⚠️ Couldn't retrieve forecast data."
 
     entries = data["list"][:count]
     lines = ["**📅 Forecast (next few intervals):**"]
-
     for entry in entries:
         time = timestamp_to_time(entry["dt"])
         temp = entry["main"]["temp"]
         humidity = entry["main"]["humidity"]
         description = entry["weather"][0]["description"].capitalize()
-        lines.append(f"> **{time}** — {temp}°C, {humidity}% humidity, {description}")
+        emoji = get_weather_emoji(entry["weather"][0]["main"])
+
+        lines.append(f"{emoji} **{time}** — {temp}°C, {humidity}% humidity, {description}")
 
     return "\n".join(lines)
 
+
 def generate_weather_tip(data: dict) -> str:
     """
-    Returns a message with advice based on weather condition and temperature.
+    Gives basic advice based on the temperature and weather condition.
     """
     if not data:
         return ""
@@ -68,27 +63,27 @@ def generate_weather_tip(data: dict) -> str:
     condition = data["weather"][0]["main"].lower()
     tips = []
 
-    if temp > 30:
-        tips.append("It’s quite hot. Stay hydrated and avoid direct sun.")
-    elif temp < 10:
-        tips.append("It’s cold. Dress warmly.")
+    if temp >= 35:
+        tips.append("🔥 It's extremely hot! Stay hydrated and avoid going out.")
+    elif temp <= 5:
+        tips.append("🧊 It's freezing! Dress warmly and stay indoors if possible.")
 
     if "rain" in condition:
-        tips.append("Carry an umbrella – it looks rainy.")
+        tips.append("☔ Take an umbrella, it's rainy.")
     elif "snow" in condition:
-        tips.append("It might snow. Stay warm and drive safely.")
+        tips.append("❄️ Snow expected. Wear boots and warm layers.")
+    elif "thunder" in condition:
+        tips.append("⚡ Thunderstorm alert! Stay inside.")
     elif "clear" in condition:
-        tips.append("Clear skies – great time to go outside!")
+        tips.append("🌞 Clear skies — a good time to go out!")
 
     return "💡 **Tip:** " + " ".join(tips) if tips else ""
 
-def timestamp_to_time(ts: int) -> str:
-    return datetime.fromtimestamp(ts).strftime('%I:%M %p')
 
-def timestamp_to_datetime(ts: int) -> str:
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %I:%M %p')
-
-def get_weather_emoji(condition):
+def get_weather_emoji(condition: str) -> str:
+    """
+    Maps weather conditions to emojis.
+    """
     condition = condition.lower()
     if "clear" in condition:
         return "☀️"
@@ -111,52 +106,74 @@ def get_weather_emoji(condition):
     else:
         return "🌡️"
 
+# -----------------------------
+# 🕒 UTILITIES
+# -----------------------------
 
-def format_current_weather(data):
-    main = data['main']
-    weather = data['weather'][0]
-    wind = data['wind']
-    sys = data['sys']
-    coord = data['coord']
+def timestamp_to_time(ts: int) -> str:
+    return datetime.fromtimestamp(ts).strftime('%I:%M %p')
 
-    emoji = get_weather_emoji(weather['main'])
+
+def timestamp_to_datetime(ts: int) -> str:
+    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %I:%M %p')
+
+
+# -----------------------------
+# 🌫️ AIR QUALITY FORMATTER
+# -----------------------------
+
+def format_air_quality(data: dict) -> str:
+    """
+    Formats air quality data into a Discord-friendly message.
+    """
+    if not data:
+        return "⚠️ Couldn't retrieve air quality data."
+
+    aqi = data.get("overall_aqi")
+    pm25 = data.get("PM2.5", {}).get("concentration", "N/A")
+    pm10 = data.get("PM10", {}).get("concentration", "N/A")
+    co = data.get("CO", {}).get("concentration", "N/A")
+    no2 = data.get("NO2", {}).get("concentration", "N/A")
+    o3 = data.get("O3", {}).get("concentration", "N/A")
+
+    health = interpret_aqi(aqi)
 
     return (
-        f"{emoji} **{weather['description'].capitalize()}**\n"
-        f"🌡️ Temperature: {main['temp']}°C (Feels like {main['feels_like']}°C)\n"
-        f"💧 Humidity: {main['humidity']}%\n"
-        f"🌬️ Wind Speed: {wind['speed']} m/s\n"
-        f"📍 Coordinates: [Lat: {coord['lat']}, Lon: {coord['lon']}]\n"
-        f"🌅 Sunrise: <t:{sys['sunrise']}:t> | 🌇 Sunset: <t:{sys['sunset']}:t>"
+        f"**🌫️ Air Quality Index (AQI):** {aqi} — {health}\n"
+        f"> 🟤 PM2.5: {pm25} μg/m³\n"
+        f"> ⚪ PM10: {pm10} μg/m³\n"
+        f"> 🟡 CO: {co} μg/m³\n"
+        f"> 🔵 NO₂: {no2} μg/m³\n"
+        f"> 🟢 O₃: {o3} μg/m³"
     )
 
-
-def format_forecast(data):
-    forecast_text = "**Next Forecast Intervals:**\n"
-    for item in data['list'][:4]:
-        weather = item['weather'][0]
-        emoji = get_weather_emoji(weather['main'])
-
-        forecast_text += (
-            f"{emoji} `{item['dt_txt']}`: {weather['description'].capitalize()}, "
-            f"{item['main']['temp']}°C\n"
-        )
-    return forecast_text
-
-
-def generate_weather_tip(current):
-    temp = current['main']['temp']
-    condition = current['weather'][0]['main'].lower()
-
-    if temp >= 35:
-        return "🔥 It's really hot! Stay hydrated."
-    elif temp <= 5:
-        return "🧊 It's freezing! Dress warmly."
-    elif "rain" in condition:
-        return "☔ Carry an umbrella — it's rainy!"
-    elif "snow" in condition:
-        return "❄️ Wear boots — snow expected."
-    elif "thunder" in condition:
-        return "⚡ Thunderstorms possible — stay indoors."
+def interpret_aqi(aqi: int) -> str:
+    if aqi <= 50:
+        return "Good 😊"
+    elif aqi <= 100:
+        return "Moderate 😐"
+    elif aqi <= 150:
+        return "Unhealthy for Sensitive Groups 🤧"
+    elif aqi <= 200:
+        return "Unhealthy 😷"
+    elif aqi <= 300:
+        return "Very Unhealthy 🤢"
     else:
-        return "✅ Weather looks fine. Enjoy your day!"
+        return "Hazardous ☠️"
+
+def get_aqi_level_and_tip(aqi: int) -> tuple[str, str]:
+    """
+    Returns the AQI level and a safety tip based on the overall AQI.
+    """
+    if aqi <= 50:
+        return ("🟢 Good", "Air quality is great. Enjoy your day!")
+    elif aqi <= 100:
+        return ("🟡 Moderate", "Air is okay, but sensitive people should limit long outdoor exposure.")
+    elif aqi <= 150:
+        return ("🟠 Unhealthy for Sensitive Groups", "Children, elderly, and people with conditions should avoid long outdoor activity.")
+    elif aqi <= 200:
+        return ("🔴 Unhealthy", "Limit outdoor activity. Wear a mask if needed.")
+    elif aqi <= 300:
+        return ("🟣 Very Unhealthy", "Avoid going outside. Use air purifiers indoors.")
+    else:
+        return ("⚫ Hazardous", "Stay indoors. Consider medical attention if symptoms occur.")

@@ -24,7 +24,8 @@ async def on_ready():
 # Load cogs (extensions)
 initial_extensions = [
     "cogs.weather_cog",
-    "cogs.help_cog"
+    "cogs.help_cog",
+    "cogs.air_cog"
 ]
 
 # Load extensions asynchronously

@@ -16,7 +16,13 @@ class HelpCog(commands.Cog):
 
         embed.add_field(
             name="`!weather [city]` or `/weather`",
-            value="Shows current weather and forecast for the given city. Defaults to Muzaffarpur if no city is provided.",
+            value="Shows current weather and forecast for the given city.\nDefaults to **Muzaffarpur** if no city is provided.",
+            inline=False
+        )
+
+        embed.add_field(
+            name="`!air [city]` or `/air`",
+            value="Shows air quality data (AQI, PM2.5, etc.) for a given city.",
             inline=False
         )
 
@@ -28,7 +34,11 @@ class HelpCog(commands.Cog):
 
         embed.set_footer(text="Built with ❤️ by Rishabh")
 
-        await ctx.reply(embed=embed)
+        # Use reply for text command or followup for slash
+        if isinstance(ctx, commands.Context):
+            await ctx.reply(embed=embed)
+        else:
+            await ctx.followup.send(embed=embed)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(HelpCog(bot))

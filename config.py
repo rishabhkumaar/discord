@@ -13,3 +13,6 @@ def get_discord_token():
 
 def get_weather_api_key():
     return os.getenv("WEATHER_API_KEY")
+
+def get_rapidapi_key():
+    return os.getenv("RAPIDAPI_KEY")
