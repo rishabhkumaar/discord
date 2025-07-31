@@ -13,7 +13,8 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 intents = discord.Intents.default()
 intents.message_content = True  # Required to read user messages
 
-bot = commands.Bot(command_prefix='/', intents=intents)
+bot = commands.Bot(command_prefix='!', intents=intents)
+bot.remove_command("help")
 
 # On ready
 @bot.event
@@ -22,15 +23,25 @@ async def on_ready():
 
 # Load cogs (extensions)
 initial_extensions = [
-    "cogs.weather_cog"
+    "cogs.weather_cog",
+    "cogs.help_cog"
 ]
 
-for extension in initial_extensions:
-    try:
-        bot.load_extension(extension)
-        print(f"✅ Loaded {extension}")
-    except Exception as e:
-        print(f"❌ Failed to load {extension}: {e}")
+# Load extensions asynchronously
+async def load_cogs():
+    for extension in initial_extensions:
+        try:
+            await bot.load_extension(extension)
+            print(f"✅ Loaded {extension}")
+        except Exception as e:
+            print(f"❌ Failed to load {extension}: {e}")
+
+# Run the loading function
+@bot.event
+async def on_ready():
+    await load_cogs()
+    await bot.tree.sync()  # Sync slash commands
+    print(f"✅ Bot is online as {bot.user}")
 
 # Run the bot
 if __name__ == "__main__":

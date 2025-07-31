@@ -87,3 +87,76 @@ def timestamp_to_time(ts: int) -> str:
 
 def timestamp_to_datetime(ts: int) -> str:
     return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %I:%M %p')
+
+def get_weather_emoji(condition):
+    condition = condition.lower()
+    if "clear" in condition:
+        return "☀️"
+    elif "cloud" in condition:
+        return "☁️"
+    elif "rain" in condition:
+        return "🌧️"
+    elif "thunder" in condition:
+        return "⛈️"
+    elif "drizzle" in condition:
+        return "🌦️"
+    elif "snow" in condition:
+        return "❄️"
+    elif "mist" in condition or "fog" in condition or "haze" in condition:
+        return "🌫️"
+    elif "smoke" in condition:
+        return "🚬"
+    elif "dust" in condition or "sand" in condition:
+        return "🏜️"
+    else:
+        return "🌡️"
+
+
+def format_current_weather(data):
+    main = data['main']
+    weather = data['weather'][0]
+    wind = data['wind']
+    sys = data['sys']
+    coord = data['coord']
+
+    emoji = get_weather_emoji(weather['main'])
+
+    return (
+        f"{emoji} **{weather['description'].capitalize()}**\n"
+        f"🌡️ Temperature: {main['temp']}°C (Feels like {main['feels_like']}°C)\n"
+        f"💧 Humidity: {main['humidity']}%\n"
+        f"🌬️ Wind Speed: {wind['speed']} m/s\n"
+        f"📍 Coordinates: [Lat: {coord['lat']}, Lon: {coord['lon']}]\n"
+        f"🌅 Sunrise: <t:{sys['sunrise']}:t> | 🌇 Sunset: <t:{sys['sunset']}:t>"
+    )
+
+
+def format_forecast(data):
+    forecast_text = "**Next Forecast Intervals:**\n"
+    for item in data['list'][:4]:
+        weather = item['weather'][0]
+        emoji = get_weather_emoji(weather['main'])
+
+        forecast_text += (
+            f"{emoji} `{item['dt_txt']}`: {weather['description'].capitalize()}, "
+            f"{item['main']['temp']}°C\n"
+        )
+    return forecast_text
+
+
+def generate_weather_tip(current):
+    temp = current['main']['temp']
+    condition = current['weather'][0]['main'].lower()
+
+    if temp >= 35:
+        return "🔥 It's really hot! Stay hydrated."
+    elif temp <= 5:
+        return "🧊 It's freezing! Dress warmly."
+    elif "rain" in condition:
+        return "☔ Carry an umbrella — it's rainy!"
+    elif "snow" in condition:
+        return "❄️ Wear boots — snow expected."
+    elif "thunder" in condition:
+        return "⚡ Thunderstorms possible — stay indoors."
+    else:
+        return "✅ Weather looks fine. Enjoy your day!"
