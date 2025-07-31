@@ -25,7 +25,11 @@ async def on_ready():
 initial_extensions = [
     "cogs.weather_cog",
     "cogs.help_cog",
-    "cogs.air_cog"
+    "cogs.air_cog",
+    "cogs.moderation_cog",
+    "cogs.dm_cog",
+    "cogs.userinfo_cog",
+    "cogs.mutual_cog"
 ]
 
 # Load extensions asynchronously
