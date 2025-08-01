@@ -24,7 +24,8 @@ initial_extensions = [
     "cogs.moderation_cog",
     "cogs.dm_cog",
     "cogs.userinfo_cog",
-    "cogs.mutual_cog"
+    "cogs.mutual_cog",
+    "cogs.game_cog"
 ]
 
 # Background task to update status every 5 minutes
