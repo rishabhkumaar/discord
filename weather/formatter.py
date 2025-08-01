@@ -1,4 +1,5 @@
 from datetime import datetime
+import pytz
 
 # -----------------------------
 # 📦 WEATHER FORMATTERS
@@ -9,7 +10,7 @@ def format_current_weather(data: dict) -> str:
     Formats current weather data into a clean, readable message.
     """
     if not data:
-        return "⚠️ Couldn't retrieve current weather data."
+        return "⚠️ Unable to retrieve current weather data."
 
     main = data["main"]
     weather = data["weather"][0]
@@ -20,15 +21,15 @@ def format_current_weather(data: dict) -> str:
     emoji = get_weather_emoji(weather["main"])
 
     return (
+        f"**🌤️ Current Weather Overview**\n"
         f"{emoji} **{weather['description'].capitalize()}**\n"
-        f"🌡️ Temperature: {main['temp']}°C (Feels like {main['feels_like']}°C)\n"
-        f"💧 Humidity: {main['humidity']}%\n"
-        f"🔵 Pressure: {main['pressure']} hPa\n"
-        f"☁️ Cloud Coverage: {data['clouds']['all']}%\n"
-        f"🌬️ Wind: {wind['speed']} km/h (Gusts: {wind.get('gust', 0)} km/h)\n"
-        f"🌅 Sunrise: {timestamp_to_time(sys['sunrise'])} | 🌇 Sunset: {timestamp_to_time(sys['sunset'])}\n"
-        f"📍 Coordinates: [Lat: {coord['lat']}, Lon: {coord['lon']}]\n"
-        f"🕒 Last updated: {timestamp_to_datetime(data['dt'])}"
+        f"> 🌡️ Temperature: `{main['temp']}°C` (Feels like `{main['feels_like']}°C`)\n"
+        f"> 💧 Humidity: `{main['humidity']}%` | 🔵 Pressure: `{main['pressure']} hPa`\n"
+        f"> ☁️ Cloudiness: `{data['clouds']['all']}%`\n"
+        f"> 🌬️ Wind: `{wind['speed']} km/h` (Gusts: `{wind.get('gust', 0)} km/h`)\n"
+        f"> 🌅 Sunrise: `{timestamp_to_time(sys['sunrise'])}` | 🌇 Sunset: `{timestamp_to_time(sys['sunset'])}`\n"
+        f"> 📍 Location: `Lat {coord['lat']} / Lon {coord['lon']}`\n"
+        f"> 🕒 Last updated: `{timestamp_to_datetime(data['dt'])}`"
     )
 
 def format_forecast(data: dict, count: int = 3) -> str:
@@ -36,25 +37,22 @@ def format_forecast(data: dict, count: int = 3) -> str:
     Formats forecast data for the next few intervals.
     """
     if not data or "list" not in data:
-        return "⚠️ Couldn't retrieve forecast data."
+        return "⚠️ Unable to retrieve forecast data."
 
-    entries = data["list"][:count]
-    lines = ["**📅 Forecast (next few intervals):**"]
-
-    for entry in entries:
+    lines = ["**📅 Forecast Snapshot:**"]
+    for entry in data["list"][:count]:
         time = timestamp_to_time(entry["dt"])
         temp = entry["main"]["temp"]
         humidity = entry["main"]["humidity"]
         description = entry["weather"][0]["description"].capitalize()
         emoji = get_weather_emoji(entry["weather"][0]["main"])
-
-        lines.append(f"{emoji} **{time}** — {temp}°C, {humidity}% humidity, {description}")
+        lines.append(f"> {emoji} **{time}** — `{temp}°C`, `{humidity}%` humidity, {description}")
 
     return "\n".join(lines)
 
 def generate_weather_tip(data: dict) -> str:
     """
-    Gives basic advice based on the temperature and weather condition.
+    Provides context-aware weather advice.
     """
     if not data:
         return ""
@@ -64,86 +62,77 @@ def generate_weather_tip(data: dict) -> str:
     tips = []
 
     if temp >= 35:
-        tips.append("It's extremely hot! Stay hydrated and avoid going out.")
+        tips.append("Stay hydrated. Avoid direct sunlight.")
     elif temp <= 5:
-        tips.append("It's freezing! Dress warmly and stay indoors if possible.")
+        tips.append("Wear warm clothes. It's freezing!")
 
     if "rain" in condition:
-        tips.append("Take an umbrella, it's rainy.")
+        tips.append("Carry an umbrella. Rain expected.")
     elif "snow" in condition:
-        tips.append("Snow expected. Wear boots and warm layers.")
+        tips.append("Snowfall ahead. Wear boots and stay warm.")
     elif "thunder" in condition:
-        tips.append("Thunderstorm alert! Stay inside.")
+        tips.append("Thunderstorm alert. Best to stay indoors.")
     elif "clear" in condition:
-        tips.append("Clear skies — a good time to go out!")
+        tips.append("Perfect weather outside. Enjoy your day!")
 
-    return "💡 **Tip:** " + " ".join(tips) if tips else ""
+    return "💡 **Pro Tip:** " + " ".join(tips) if tips else ""
 
 def get_weather_emoji(condition: str) -> str:
     """
-    Maps weather conditions to emojis.
+    Maps weather conditions to corresponding emojis.
     """
     condition = condition.lower()
-    if "clear" in condition:
-        return "☀️"
-    elif "cloud" in condition:
-        return "☁️"
-    elif "rain" in condition:
-        return "🌧️"
-    elif "thunder" in condition:
-        return "⛈️"
-    elif "drizzle" in condition:
-        return "🌦️"
-    elif "snow" in condition:
-        return "❄️"
-    elif "mist" in condition or "fog" in condition or "haze" in condition:
-        return "🌫️"
-    elif "smoke" in condition:
-        return "🚬"
-    elif "dust" in condition or "sand" in condition:
-        return "🏜️"
-    else:
-        return "🌡️"
+    return {
+        "clear": "☀️",
+        "cloud": "☁️",
+        "rain": "🌧️",
+        "thunder": "⛈️",
+        "drizzle": "🌦️",
+        "snow": "❄️",
+        "mist": "🌫️",
+        "fog": "🌫️",
+        "haze": "🌫️",
+        "smoke": "🚬",
+        "dust": "🏜️",
+        "sand": "🏜️",
+    }.get(condition, "🌡️")
 
 # -----------------------------
-# 🕒 TIME UTILITIES
+# 🕒 TIME UTILITIES (IST Support)
 # -----------------------------
 
 def timestamp_to_time(ts: int) -> str:
-    return datetime.fromtimestamp(ts).strftime('%I:%M %p')
+    ist = pytz.timezone("Asia/Kolkata")
+    return datetime.fromtimestamp(ts, ist).strftime('%I:%M %p')
 
 def timestamp_to_datetime(ts: int) -> str:
-    return datetime.fromtimestamp(ts).strftime('%Y-%m-%d %I:%M %p')
+    ist = pytz.timezone("Asia/Kolkata")
+    return datetime.fromtimestamp(ts, ist).strftime('%Y-%m-%d %I:%M %p')
 
 # -----------------------------
 # 🌫️ AIR QUALITY FORMATTERS
 # -----------------------------
 
 def get_aqi_level_and_tip(aqi: int) -> tuple[str, str]:
-    """
-    Returns the AQI level and a safety tip based on the overall AQI.
-    """
     if aqi <= 50:
-        return ("🟢 Good", "Air quality is great. Enjoy your day!")
+        return ("🟢 Good", "Air quality is excellent.")
     elif aqi <= 100:
-        return ("🟡 Moderate", "Air is okay, but sensitive people should limit long outdoor exposure.")
+        return ("🟡 Moderate", "Safe for most, but limit long outdoor exposure if sensitive.")
     elif aqi <= 150:
-        return ("🟠 Unhealthy for Sensitive Groups", "Children, elderly, and people with conditions should avoid long outdoor activity.")
+        return ("🟠 Unhealthy for Sensitive Groups", "People with breathing issues should avoid long outdoor activity.")
     elif aqi <= 200:
-        return ("🔴 Unhealthy", "Limit outdoor activity. Wear a mask if needed.")
+        return ("🔴 Unhealthy", "Avoid extended outdoor exposure. Wear a mask if needed.")
     elif aqi <= 300:
-        return ("🟣 Very Unhealthy", "Avoid going outside. Use air purifiers indoors.")
+        return ("🟣 Very Unhealthy", "Stay indoors and use an air purifier if possible.")
     else:
-        return ("⚫ Hazardous", "Stay indoors. Consider medical attention if symptoms occur.")
+        return ("⚫ Hazardous", "Avoid outdoor activity. Seek medical help if symptoms appear.")
 
 def format_air_quality(data: dict) -> str:
-    """
-    Formats air quality data into a visually informative Discord message.
-    """
     if not data:
-        return "⚠️ Couldn't retrieve air quality data."
+        return "⚠️ Unable to retrieve air quality data."
 
     aqi = data.get("overall_aqi", "N/A")
+    level, tip = get_aqi_level_and_tip(aqi)
 
     pollutants = {
         "PM2.5": data.get("PM2.5", {}).get("concentration", "N/A"),
@@ -154,35 +143,27 @@ def format_air_quality(data: dict) -> str:
         "O₃": data.get("O3", {}).get("concentration", "N/A"),
     }
 
-    level, tip = get_aqi_level_and_tip(aqi)
-
     emoji_map = {
-        "PM2.5": "🟤",
-        "PM10": "⚪",
-        "CO": "🟡",
-        "SO₂": "🔴",
-        "NO₂": "🔵",
-        "O₃": "🟢"
+        "PM2.5": "🟤", "PM10": "⚪", "CO": "🟡",
+        "SO₂": "🔴", "NO₂": "🔵", "O₃": "🟢"
     }
 
     unit_map = {
-        "PM2.5": "μg/m³",
-        "PM10": "μg/m³",
-        "CO": "ppb",
-        "SO₂": "ppb",
-        "NO₂": "ppb",
-        "O₃": "ppb"
+        "PM2.5": "μg/m³", "PM10": "μg/m³",
+        "CO": "ppb", "SO₂": "ppb", "NO₂": "ppb", "O₃": "ppb"
     }
 
-    lines = [f"**🌫️ Air Quality Report**",
-             f"**AQI:** {aqi} — {level}",
-             f"💡 {tip}",
-             "",
-             "**📊 Pollutant Concentrations:**"]
+    lines = [
+        "**🌫️ Air Quality Overview**",
+        f"> **AQI**: `{aqi}` — {level}",
+        f"> 💡 {tip}",
+        "",
+        "**📊 Pollutant Breakdown:**"
+    ]
 
     for name, value in pollutants.items():
         emoji = emoji_map.get(name, "🔸")
         unit = unit_map.get(name, "")
-        lines.append(f"> {emoji} **{name}**: {value} {unit}")
+        lines.append(f"> {emoji} **{name}**: `{value} {unit}`")
 
     return "\n".join(lines)
