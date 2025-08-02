@@ -25,7 +25,9 @@ initial_extensions = [
     "cogs.dm_cog",
     "cogs.userinfo_cog",
     "cogs.mutual_cog",
-    "cogs.game_cog"
+    "cogs.game_cog",
+    "cogs.ping_cog",
+    "cogs.steal_cog"
 ]
 
 # Background task to update status every 5 minutes
@@ -34,7 +36,7 @@ async def update_presence():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"🌦️ | rizzhub.kr | {len(bot.guilds)} servers"
+            name=f"{len(bot.guilds)} servers! 🌦️"
         ),
         status=discord.Status.online
     )
