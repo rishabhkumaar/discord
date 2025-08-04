@@ -12,27 +12,41 @@ class HelpCog(commands.Cog):
 
         embed = discord.Embed(
             title="📖 Help Menu",
-            description="Here are the available commands and their usage:",
-            color=discord.Color.green()
+            description="Explore all available features below.\nUse **slash commands** or **prefix `!`**!",
+            color=discord.Color.blurple()
         )
+
+        total_commands = 0
 
         for cog in self.bot.cogs.values():
             cog_commands = cog.get_commands()
-            command_list = ""
-            for command in cog_commands:
-                if not command.hidden:
-                    command_list += f"**/{command.name}** – {command.description or 'No description'}\n"
-            if command_list:
-                embed.add_field(name=f"📦 {cog.qualified_name}", value=command_list, inline=False)
+            visible_commands = [cmd for cmd in cog_commands if not cmd.hidden]
 
-        embed.set_footer(text="Use slash commands or prefix commands like !help")
+            if not visible_commands:
+                continue
+
+            command_list = ""
+            for cmd in visible_commands:
+                description = cmd.description or "No description"
+                command_list += f"➤ `/{cmd.name}` – {description}\n"
+                total_commands += 1
+
+            if command_list:
+                embed.add_field(
+                    name=f"📦 {cog.qualified_name}",
+                    value=command_list,
+                    inline=False
+                )
+
+        embed.set_footer(text=f"{total_commands} commands available • Bot by rizzhub.kr")
 
         if self.bot.user and self.bot.user.avatar:
             embed.set_thumbnail(url=self.bot.user.avatar.url)
 
-        # Add support server button
+        # Add support server and invite buttons
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="Join Support Server", url="https://discord.gg/WjWZwmpK"))
+        view.add_item(discord.ui.Button(label="🌐 Support Server", url="https://discord.gg/WjWZwmpK"))
+        view.add_item(discord.ui.Button(label="➕ Invite Bot", url="https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot%20applications.commands"))
 
         await ctx.send(embed=embed, view=view)
 

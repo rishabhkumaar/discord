@@ -11,12 +11,12 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 
 # Setup bot with command prefix and intents
 intents = discord.Intents.default()
-intents.message_content = True  # Required to read user messages
+intents.message_content = True  # Needed for reading commands
 
 bot = commands.Bot(command_prefix='!', intents=intents)
 bot.remove_command("help")
 
-# List of initial extensions (cogs)
+# ─── COGS TO LOAD ─── #
 initial_extensions = [
     "cogs.weather_cog",
     "cogs.help_cog",
@@ -27,16 +27,17 @@ initial_extensions = [
     "cogs.mutual_cog",
     "cogs.game_cog",
     "cogs.ping_cog",
-    "cogs.steal_cog"
+    "cogs.steal_cog",
+    "cogs.wiki_cog",  # 🆕 Wiki Cog
 ]
 
-# Background task to update status every 5 minutes
+# ─── PRESENCE TASK ─── #
 @tasks.loop(minutes=5)
 async def update_presence():
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
-            name=f"{len(bot.guilds)} servers! 🌦️"
+            name=f"{len(bot.guilds)} servers | 🌐 !help"
         ),
         status=discord.Status.online
     )
@@ -45,24 +46,24 @@ async def update_presence():
 async def before_presence():
     await bot.wait_until_ready()
 
-# Load cogs and setup status on bot ready
+# ─── ON READY EVENT ─── #
 @bot.event
 async def on_ready():
     print(f"✅ Bot is online as {bot.user}")
 
-    # Load cogs only once
     if not hasattr(bot, "cogs_loaded"):
         for extension in initial_extensions:
             try:
                 await bot.load_extension(extension)
-                print(f"✅ Loaded {extension}")
+                print(f"✅ Loaded: {extension}")
             except Exception as e:
-                print(f"❌ Failed to load {extension}: {e}")
+                print(f"❌ Failed to load: {extension}\n   ↳ Error: {e}")
+
         await bot.tree.sync()
         print("🔁 Slash commands synced.")
         bot.cogs_loaded = True
 
-    # Set initial presence and start loop
+    # Initial presence
     await bot.change_presence(
         activity=discord.Activity(
             type=discord.ActivityType.watching,
@@ -70,10 +71,12 @@ async def on_ready():
         ),
         status=discord.Status.online
     )
+
+    # Start background presence updater
     if not update_presence.is_running():
         update_presence.start()
 
-# Run the bot
+# ─── RUN ─── #
 if __name__ == "__main__":
     if TOKEN:
         bot.run(TOKEN)
