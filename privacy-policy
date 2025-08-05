@@ -1,0 +1,50 @@
+Privacy Policy for Rishource Discord Bot
+Last Updated: 2025-08-05
+
+Thank you for using Rishource ("the Bot"). This Privacy Policy explains what data the Bot collects, how it is used, and your rights regarding that data.
+
+1. Data Collected
+
+The Bot may collect the following data when used on a Discord server:
+- User ID
+- Username and Discriminator (e.g., User#1234)
+- Server ID
+- Server Name
+- Channel IDs
+- Command usage data
+
+The Bot does not collect or store message content unless required temporarily to perform specific functions or features.
+
+2. Use of Data
+
+Collected data is used only to:
+- Operate the Bot’s features
+- Improve functionality and performance
+- Maintain stability and prevent abuse
+
+No data is sold or shared with third parties.
+
+3. Data Storage and Security
+
+Any stored data is kept securely and is only accessible to authorized systems or administrators. Reasonable technical measures are taken to protect data from unauthorized access or loss.
+
+4. Data Retention
+
+Data is retained only as long as necessary to support bot functionality. Users may delete their data by removing the Bot from their server. If your server uses features that store persistent data (e.g., settings), that data will be deleted upon removal or reset of the bot.
+
+5. User Rights
+
+Users have the right to:
+- Understand what data is collected
+- Stop data collection by ceasing use of the Bot
+- Request data deletion by removing the Bot from the server
+
+6. Children's Privacy
+
+This Bot is not intended for users under the age of 13. If you are under 13, do not use this Bot.
+
+7. Changes to This Policy
+
+This Privacy Policy may be updated from time to time. The latest version will always be available within the bot's source or via a command.
+
+By using Rishource, you agree to the terms outlined in this Privacy Policy.
