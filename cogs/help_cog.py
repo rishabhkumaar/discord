@@ -12,41 +12,62 @@ class HelpCog(commands.Cog):
 
         embed = discord.Embed(
             title="📖 Help Menu",
-            description="Explore all available features below.\nUse **slash commands** or **prefix `!`**!",
+            description="Here’s what I can do!\nYou can use **slash commands** or prefix commands like `!command`.",
             color=discord.Color.blurple()
         )
 
         total_commands = 0
 
-        for cog in self.bot.cogs.values():
+        # Loop through cogs and their commands
+        for cog in sorted(self.bot.cogs.values(), key=lambda c: c.qualified_name.lower()):
             cog_commands = cog.get_commands()
-            visible_commands = [cmd for cmd in cog_commands if not cmd.hidden]
+
+            # Filter visible commands that the user can run
+            visible_commands = [
+                cmd for cmd in cog_commands
+                if not cmd.hidden and await cmd.can_run(ctx)
+            ]
 
             if not visible_commands:
                 continue
 
+            # Sort alphabetically
+            visible_commands.sort(key=lambda c: c.name)
+
+            # Build command list text
             command_list = ""
             for cmd in visible_commands:
-                description = cmd.description or "No description"
+                description = cmd.description or "No description provided."
                 command_list += f"➤ `/{cmd.name}` – {description}\n"
                 total_commands += 1
 
-            if command_list:
-                embed.add_field(
-                    name=f"📦 {cog.qualified_name}",
-                    value=command_list,
-                    inline=False
-                )
+            embed.add_field(
+                name=f"📦 {cog.qualified_name}",
+                value=command_list,
+                inline=False
+            )
 
         embed.set_footer(text=f"{total_commands} commands available • Bot by rizzhub.kr")
 
         if self.bot.user and self.bot.user.avatar:
             embed.set_thumbnail(url=self.bot.user.avatar.url)
 
-        # Add support server and invite buttons
+        # Buttons
         view = discord.ui.View()
-        view.add_item(discord.ui.Button(label="🌐 Support Server", url="https://discord.gg/WjWZwmpK"))
-        view.add_item(discord.ui.Button(label="➕ Invite Bot", url="https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot%20applications.commands"))
+
+        # Support Server Button
+        view.add_item(discord.ui.Button(
+            label="🌐 Support Server",
+            url="https://discord.gg/WjWZwmpK"
+        ))
+
+        # Invite Button (auto-fetch client ID)
+        client_id = self.bot.user.id
+        invite_url = f"https://discord.com/oauth2/authorize?client_id={client_id}&permissions=8&scope=bot%20applications.commands"
+        view.add_item(discord.ui.Button(
+            label="➕ Invite Bot",
+            url=invite_url
+        ))
 
         await ctx.send(embed=embed, view=view)
 
