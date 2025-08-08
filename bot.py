@@ -28,7 +28,8 @@ initial_extensions = [
     "cogs.game_cog",
     "cogs.ping_cog",
     "cogs.steal_cog",
-    "cogs.wiki_cog",  # 🆕 Wiki Cog
+    "cogs.wiki_cog",
+    "cogs.emoji_cog"
 ]
 
 # ─── PRESENCE TASK ─── #
