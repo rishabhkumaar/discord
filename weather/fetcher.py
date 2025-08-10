@@ -4,10 +4,6 @@ from config import get_weather_api_key
 BASE_URL = "https://api.openweathermap.org/data/2.5"
 
 def get_current_weather(city: str = None, lat: float = None, lon: float = None) -> dict:
-    """
-    Fetches current weather data by city name or coordinates.
-    Returns JSON response or None if failed.
-    """
     api_key = get_weather_api_key()
 
     if city:
