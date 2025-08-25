@@ -82,6 +82,9 @@ Examples:
 /weather bangalore
 ```
 
+And many more...
+(In Development)
+
 ---
 
 ## 🛡️ Security Tips

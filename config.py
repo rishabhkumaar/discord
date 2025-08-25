@@ -2,10 +2,6 @@ import os
 from dotenv import load_dotenv
 
 def load_env():
-    """
-    Load environment variables from a .env file into the OS environment.
-    Call this before accessing any secrets.
-    """
     load_dotenv()
 
 def get_discord_token():
